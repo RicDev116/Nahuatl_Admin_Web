@@ -33,8 +33,10 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Create Environment File from Template
-        run: cp src/environments/environment.example.ts src/environments/environment.ts
+      - name: Inject Environment Config from Secret
+        run: |
+          mkdir -p src/environments
+          echo "${{ secrets.ENV_CONFIG }}" > src/environments/environment.ts
 
       - name: Build Production Bundle
         run: npm run build -- --configuration production
@@ -58,8 +60,10 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Create Environment File from Template
-        run: cp src/environments/environment.example.ts src/environments/environment.ts
+      - name: Inject Environment Config from Secret
+        run: |
+          mkdir -p src/environments
+          echo "${{ secrets.ENV_CONFIG }}" > src/environments/environment.ts
 
       - name: Build Production Bundle
         run: npm run build -- --configuration production
