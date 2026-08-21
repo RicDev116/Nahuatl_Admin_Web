@@ -70,5 +70,5 @@ jobs:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_NAHUATL_APP }}'
           channelId: live
-          projectId: nahuatl-app-38b81
+          projectId: nahuatl-app-73a06
         continue-on-error: true
