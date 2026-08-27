@@ -129,7 +129,18 @@ import { ExerciseItem, ExerciseType, ExerciseDirection, SubmoduleItem } from '..
               <div class="form-group" *ngIf="currentExercise.type === 'IMAGE_SELECTION'">
                 <label>Subir Imagen o Nombre de Asset Local</label>
                 <input type="text" class="form-control" [(ngModel)]="currentExercise.imageUrl" name="imageUrl" placeholder="img_atl" />
-                <input type="file" (change)="onFileSelected($event, 'images')" accept="image/*" class="file-input" />
+                <input type="file" (change)="onFileSelected($event, 'images')" accept="image/*" class="file-input" style="margin-top: 0.5rem;" />
+              </div>
+
+              <!-- Uploader de Audio Pronunciación (.wav / .mp3) -->
+              <div class="form-group">
+                <label>Audio del Ejercicio (.wav / .mp3 o URL de Storage)</label>
+                <input type="text" class="form-control" [(ngModel)]="currentExercise.audioUrl" name="audioUrl" placeholder="https://firebasestorage... o ex_1_audio.wav" />
+                <input type="file" (change)="onFileSelected($event, 'audios')" accept="audio/*" class="file-input" style="margin-top: 0.5rem;" />
+                <div *ngIf="currentExercise.audioUrl" class="audio-badge" style="margin-top: 0.5rem; color: #FACC15; display: flex; align-items: center; gap: 0.5rem;">
+                  <span>🔊 Audio vinculado</span>
+                  <button type="button" class="btn-sm btn-edit" (click)="playSimAudio(currentExercise.audioUrl)">▶ Probar</button>
+                </div>
               </div>
 
               <div class="modal-footer">
@@ -328,6 +339,16 @@ export class ExercisesManagerComponent implements OnInit {
       const url = await this.firestoreService.uploadMediaFile(file, folder);
       if (folder === 'images') this.currentExercise.imageUrl = url;
       else this.currentExercise.audioUrl = url;
+    }
+  }
+
+  playSimAudio(url?: string) {
+    if (!url) return;
+    try {
+      const audio = new Audio(url);
+      audio.play().catch(err => console.log('Audio preview playback error:', err));
+    } catch (e) {
+      console.error('Audio playback failed:', e);
     }
   }
 
