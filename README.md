@@ -2,6 +2,10 @@
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.1.5.
 
+## Convenciones de Commits
+
+Este proyecto requiere el uso de [Conventional Commits](COMMIT_CONVENTIONS.md) para todos los cambios. Por favor revisa la guía antes de realizar commits.
+
 ## Development server
 
 To start a local development server, run:

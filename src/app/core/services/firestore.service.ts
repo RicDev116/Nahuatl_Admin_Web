@@ -129,10 +129,8 @@ export class FirestoreService {
     let newVersion = 1;
 
     if (snap.exists()) {
-      const currentVer = snap.data()['version'] || 1;
-      newVersion = currentVer + 1;
       await updateDoc(docRef, {
-        version: increment(1),
+        version: 1,
         last_update: serverTimestamp()
       });
     } else {

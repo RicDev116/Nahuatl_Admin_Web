@@ -103,26 +103,55 @@ import { ExerciseItem, ExerciseType, ExerciseDirection, SubmoduleItem } from '..
                 </select>
               </div>
 
-              <div class="form-group">
-                <label>Pregunta / Texto Prompt</label>
-                <input type="text" class="form-control" [(ngModel)]="currentExercise.promptText" name="promptText" (keyup)="onPromptChange()" required />
+              <div class="lang-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                <button type="button" class="tab-btn" [class.active]="activeLangTab === 'es'" (click)="setLangTab('es')">🇲🇽 Español</button>
+                <button type="button" class="tab-btn" [class.active]="activeLangTab === 'en'" (click)="setLangTab('en')">🇺🇸 English</button>
               </div>
 
-              <div class="form-group">
-                <label>Respuesta Correcta</label>
-                <input type="text" class="form-control" [(ngModel)]="currentExercise.correctAnswer" name="correctAnswer" (keyup)="onAnswerChange()" required />
+              <!-- Contenido en Español -->
+              <div *ngIf="activeLangTab === 'es'">
+                <div class="form-group">
+                  <label>Pregunta / Texto Prompt (Español)</label>
+                  <input type="text" class="form-control" [(ngModel)]="currentExercise.promptText" name="promptText" (keyup)="onPromptChange()" required />
+                </div>
+
+                <div class="form-group">
+                  <label>Respuesta Correcta (Español/Náhuatl)</label>
+                  <input type="text" class="form-control" [(ngModel)]="currentExercise.correctAnswer" name="correctAnswer" (keyup)="onAnswerChange()" required />
+                </div>
+
+                <div class="form-group">
+                  <label>Opciones / Fichas en Español (separadas por coma)</label>
+                  <input type="text" class="form-control" [ngModel]="optionsInput" (ngModelChange)="onOptionsInputChange($event)" name="optionsInput" placeholder="Ej: ¿Cómo, estás?, Hola, gracias, yo" />
+                </div>
+
+                <div class="form-group">
+                  <label>Explicación Gramatical / Nota Cultural (Español)</label>
+                  <textarea class="form-control" [(ngModel)]="currentExercise.grammarExplanation" name="grammarExplanation" rows="2"></textarea>
+                </div>
               </div>
 
-              <!-- Opciones múltiples (para WORD_TRANSLATION, SENTENCE_TRANSLATION e IMAGE_SELECTION) -->
-              <div class="form-group" *ngIf="currentExercise.type !== 'SENTENCE_BUILDER'">
-                <label>Opciones Múltiples (separadas por coma)</label>
-                <input type="text" class="form-control" [ngModel]="optionsInput" (ngModelChange)="onOptionsInputChange($event)" name="optionsInput" placeholder="Niltsi, Tlaskamati, Mostla, Paki" />
-              </div>
+              <!-- Contenido en Inglés -->
+              <div *ngIf="activeLangTab === 'en'">
+                <div class="form-group">
+                  <label>Pregunta / Texto Prompt (English)</label>
+                  <input type="text" class="form-control" [(ngModel)]="currentExercise.promptTextEn" name="promptTextEn" (keyup)="onPromptChange()" placeholder="What does... mean?" />
+                </div>
 
-              <!-- Explicación Gramatical -->
-              <div class="form-group">
-                <label>Explicación Gramatical / Nota Cultural</label>
-                <textarea class="form-control" [(ngModel)]="currentExercise.grammarExplanation" name="grammarExplanation" rows="2"></textarea>
+                <div class="form-group">
+                  <label>Respuesta Correcta (English)</label>
+                  <input type="text" class="form-control" [(ngModel)]="currentExercise.correctAnswerEn" name="correctAnswerEn" (keyup)="onAnswerChange()" placeholder="How are you?" />
+                </div>
+
+                <div class="form-group">
+                  <label>Opciones / Fichas en English (separadas por coma)</label>
+                  <input type="text" class="form-control" [ngModel]="optionsEnInput" (ngModelChange)="onOptionsEnInputChange($event)" name="optionsEnInput" placeholder="Ej: How, are, you?, Hello, thanks, I" />
+                </div>
+
+                <div class="form-group">
+                  <label>Explicación Gramatical / Nota Cultural (English)</label>
+                  <textarea class="form-control" [(ngModel)]="currentExercise.grammarExplanationEn" name="grammarExplanationEn" rows="2" placeholder="Grammar and vocabulary note in English"></textarea>
+                </div>
               </div>
 
               <!-- Uploader de Imagen (IMAGE_SELECTION) -->
@@ -153,20 +182,24 @@ import { ExerciseItem, ExerciseType, ExerciseDirection, SubmoduleItem } from '..
             <div class="simulator-container">
               <div class="simulator-header">
                 <span>SIMULADOR EN TIEMPO REAL</span>
-                <span class="type-badge">{{ currentExercise.type }}</span>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                  <button type="button" class="btn-sm" [style.background]="simLang === 'es' ? '#0284C7' : '#334155'" (click)="setSimLang('es')">ES</button>
+                  <button type="button" class="btn-sm" [style.background]="simLang === 'en' ? '#0284C7' : '#334155'" (click)="setSimLang('en')">EN</button>
+                  <span class="type-badge">{{ currentExercise.type }}</span>
+                </div>
               </div>
 
               <div class="sim-screen">
                 <div class="prompt-header">
-                  <h3>{{ currentExercise.promptText || '¿Cómo se dice Hola?' }}</h3>
+                  <h3>{{ getSimPrompt() }}</h3>
                 </div>
 
                 <!-- Modos WORD_TRANSLATION / SENTENCE_TRANSLATION / IMAGE_SELECTION -->
                 <div class="sim-options-grid" *ngIf="currentExercise.type !== 'SENTENCE_BUILDER'">
                   <button 
                     class="tile-btn sim-option" 
-                    *ngFor="let opt of currentExercise.options"
-                    [class.correct]="opt === currentExercise.correctAnswer"
+                    *ngFor="let opt of getSimOptions()"
+                    [class.correct]="opt === getSimCorrectAnswer()"
                   >
                     {{ opt }}
                   </button>
@@ -175,12 +208,17 @@ import { ExerciseItem, ExerciseType, ExerciseDirection, SubmoduleItem } from '..
                 <!-- Modo SENTENCE_BUILDER -->
                 <div class="sentence-builder-sim" *ngIf="currentExercise.type === 'SENTENCE_BUILDER'">
                   <div class="answer-zone">
-                    <span class="placeholder-text" *ngIf="builderSelectedTiles.length === 0">Toca las fichas inferiores para formar la oración...</span>
+                    <span class="placeholder-text" *ngIf="builderSelectedTiles.length === 0">
+                      {{ simLang === 'en' ? 'Tap the words below to build the sentence...' : 'Toca las palabras de abajo para formar la oración...' }}
+                    </span>
                     <button class="tile-btn" *ngFor="let tile of builderSelectedTiles; let i = index" (click)="removeBuilderTile(i)">
                       {{ tile }}
                     </button>
                   </div>
 
+                  <div style="margin-bottom: 0.5rem; font-size: 0.75rem; color: #94A3B8; font-weight: bold;">
+                    {{ simLang === 'en' ? 'Word bank:' : 'Banco de palabras:' }}
+                  </div>
                   <div class="bank-zone">
                     <button class="tile-btn" *ngFor="let tile of builderBankTiles; let i = index" (click)="selectBuilderTile(i)">
                       {{ tile }}
@@ -188,8 +226,8 @@ import { ExerciseItem, ExerciseType, ExerciseDirection, SubmoduleItem } from '..
                   </div>
                 </div>
 
-                <div class="explanation-box" *ngIf="currentExercise.grammarExplanation">
-                  💡 <strong>Nota Gramatical:</strong> {{ currentExercise.grammarExplanation }}
+                <div class="explanation-box" *ngIf="getSimExplanation()">
+                  💡 <strong>Nota:</strong> {{ getSimExplanation() }}
                 </div>
               </div>
             </div>
@@ -218,19 +256,22 @@ import { ExerciseItem, ExerciseType, ExerciseDirection, SubmoduleItem } from '..
     .btn-edit { background: #334155; color: white; }
     .btn-delete { background: rgba(239, 68, 68, 0.2); color: #F87171; }
 
+    .tab-btn { padding: 0.5rem 1rem; background: #334155; border: 1px solid #475569; color: #CBD5E1; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; }
+    .tab-btn.active { background: #0284C7; border-color: #38BDF8; color: white; }
+
     .modal-backdrop { position: fixed; top:0; left:0; width:100vw; height:100vh; background: rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:1000; }
     .modal-card { background: #1E293B; border: 1px solid #334155; border-radius: 20px; width: 90%; max-width: 1000px; max-height: 90vh; overflow-y: auto; padding: 2rem; }
     .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.5rem; }
     .close-btn { background:none; border:none; color:white; font-size: 1.5rem; cursor:pointer; }
     
     .simulator-container { background: #0F172A; border: 1px solid #334155; border-radius: 16px; padding: 1.5rem; }
-    .simulator-header { display:flex; justify-content:space-between; font-size: 0.75rem; color: #94A3B8; font-weight: 700; margin-bottom: 1rem; }
+    .simulator-header { display:flex; justify-content:space-between; align-items: center; font-size: 0.75rem; color: #94A3B8; font-weight: 700; margin-bottom: 1rem; }
     .sim-screen { background: #1E293B; border-radius: 12px; padding: 1.5rem; min-height: 300px; display:flex; flex-direction:column; justify-content:space-between; }
     .sim-options-grid { display:grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin: 1.5rem 0; }
     .tile-btn.sim-option.correct { border-color: #22C55E; background: rgba(34, 197, 94, 0.2); }
     
     .sentence-builder-sim { margin: 1.5rem 0; }
-    .answer-zone { min-height: 60px; border-bottom: 2px dashed #475569; padding-bottom: 0.5rem; display:flex; flex-wrap:wrap; gap: 0.5rem; margin-bottom: 1.5rem; }
+    .answer-zone { min-height: 60px; border-bottom: 2px dashed #475569; padding-bottom: 0.5rem; display:flex; flex-wrap:wrap; gap: 0.5rem; margin-bottom: 1rem; }
     .placeholder-text { color: #64748B; font-size: 0.85rem; font-style: italic; }
     .bank-zone { display:flex; flex-wrap:wrap; gap: 0.5rem; }
     .explanation-box { background: rgba(255,179,0,0.1); border: 1px solid #FFB300; padding: 0.75rem; border-radius: 8px; font-size: 0.85rem; color: #FDE047; }
@@ -247,8 +288,12 @@ export class ExercisesManagerComponent implements OnInit {
   showModal = signal<boolean>(false);
   isEditing = false;
 
+  activeLangTab: 'es' | 'en' = 'es';
+  simLang: 'es' | 'en' = 'es';
+
   currentExercise: ExerciseItem = this.getEmptyExercise();
   optionsInput = '';
+  optionsEnInput = '';
 
   // Variables para el simulador Vivo de SENTENCE_BUILDER
   builderBankTiles: string[] = [];
@@ -281,16 +326,22 @@ export class ExercisesManagerComponent implements OnInit {
 
   openNewModal() {
     this.isEditing = false;
+    this.activeLangTab = 'es';
+    this.simLang = 'es';
     this.currentExercise = this.getEmptyExercise();
     this.optionsInput = '';
+    this.optionsEnInput = '';
     this.updateSimulator();
     this.showModal.set(true);
   }
 
   editExercise(ex: ExerciseItem) {
     this.isEditing = true;
+    this.activeLangTab = 'es';
+    this.simLang = 'es';
     this.currentExercise = { ...ex };
     this.optionsInput = ex.options ? ex.options.join(', ') : '';
+    this.optionsEnInput = ex.optionsEn ? ex.optionsEn.join(', ') : '';
     this.updateSimulator();
     this.showModal.set(true);
   }
@@ -299,9 +350,24 @@ export class ExercisesManagerComponent implements OnInit {
     this.showModal.set(false);
   }
 
+  setLangTab(tab: 'es' | 'en') {
+    this.activeLangTab = tab;
+  }
+
+  setSimLang(lang: 'es' | 'en') {
+    this.simLang = lang;
+    this.updateSimulator();
+  }
+
   onOptionsInputChange(val: string) {
     this.optionsInput = val;
     this.currentExercise.options = val.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    this.updateSimulator();
+  }
+
+  onOptionsEnInputChange(val: string) {
+    this.optionsEnInput = val;
+    this.currentExercise.optionsEn = val.split(',').map(s => s.trim()).filter(s => s.length > 0);
     this.updateSimulator();
   }
 
@@ -309,16 +375,46 @@ export class ExercisesManagerComponent implements OnInit {
   onAnswerChange() { this.updateSimulator(); }
 
   onTypeChange() {
-    if (this.currentExercise.type === 'SENTENCE_BUILDER') {
-      this.builderBankTiles = this.grammarValidator.generateSentenceTokens(this.currentExercise.correctAnswer);
-      this.builderSelectedTiles = [];
-    }
     this.updateSimulator();
   }
 
+  getSimPrompt(): string {
+    if (this.simLang === 'en') {
+      return this.currentExercise.promptTextEn || this.currentExercise.promptText || 'Build the translation of:';
+    }
+    return this.currentExercise.promptText || '¿Cómo se dice...?';
+  }
+
+  getSimCorrectAnswer(): string {
+    if (this.simLang === 'en') {
+      return this.currentExercise.correctAnswerEn || this.currentExercise.correctAnswer;
+    }
+    return this.currentExercise.correctAnswer;
+  }
+
+  getSimOptions(): string[] {
+    if (this.simLang === 'en' && this.currentExercise.optionsEn && this.currentExercise.optionsEn.length > 0) {
+      return this.currentExercise.optionsEn;
+    }
+    return this.currentExercise.options || [];
+  }
+
+  getSimExplanation(): string | undefined {
+    if (this.simLang === 'en') {
+      return this.currentExercise.grammarExplanationEn || this.currentExercise.grammarExplanation;
+    }
+    return this.currentExercise.grammarExplanation;
+  }
+
   updateSimulator() {
-    if (this.currentExercise.type === 'SENTENCE_BUILDER' && this.currentExercise.correctAnswer) {
-      this.builderBankTiles = this.grammarValidator.generateSentenceTokens(this.currentExercise.correctAnswer);
+    if (this.currentExercise.type === 'SENTENCE_BUILDER') {
+      const opts = this.getSimOptions();
+      if (opts.length > 0) {
+        this.builderBankTiles = [...opts];
+      } else {
+        const ans = this.getSimCorrectAnswer();
+        this.builderBankTiles = ans ? this.grammarValidator.generateSentenceTokens(ans) : [];
+      }
       this.builderSelectedTiles = [];
     }
   }

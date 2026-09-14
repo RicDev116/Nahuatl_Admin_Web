@@ -44,9 +44,7 @@ src/app/
 - **`RicDev116/Nahuatl_Admin_Web`**: Repositorio independiente en GitHub.
 
 ### B. Ramas GitFlow:
-- `master` / `main`: Producción (despliegue automático a Firebase Hosting).
-- `develop`: Integración continua.
-- `feature/*`, `fix/*`, `hotfix/*`: Desarrollo de funcionalidades y parches.
+- La estrategia detallada de ramas (master, develop, feature, fix) está documentada en [GIT_GUIDELINES.md](GIT_GUIDELINES.md).
 
 ### C. Pipeline de CI/CD (`.github/workflows/web-ci-cd.yml`):
 1. **Job 1 (Lint & Build)**: Se ejecuta en todas las ramas en Node 22. Inyecta la variable de entorno `secrets.ENV_CONFIG` en Base64 para compilar Angular en modo producción (`npm run build`).
